@@ -20,7 +20,7 @@ How to run ChessAtr program on Atari emulators:
 Menu > Input > Arrow keys > Set Control+arrows keyboard.
 
 To open and run:
-Menu > File > Load executable. Set "Files of all types", open ChessAtr.obx file.
+Menu > File > Load executable, open ChessAtr.xex file.
 It loads in memory and starts OK.
 
 
@@ -28,7 +28,7 @@ It loads in memory and starts OK.
 ----------------------------------------------------------------
  on Altirra emulator
 ----------------------------------------------------------------
-Menu > Boot image (or Open image). Open ChessAtr.obx file.
+Menu > Boot image (or Open image). Open ChessAtr.xex file.
 
 
 

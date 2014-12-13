@@ -1,8 +1,12 @@
 ;
-; HELLO WORLD for Atari
+; A small chess project for Atari 800
 ; done on MADS compiler (http://mads.atari8.info)
 ;
-
+; User can move pieces in cursor mode (press "C" key).
+; This program replays a list of chess games by just drawing board.
+; Chess logic is ok.
+; TODO: Comp.chess player AI does not exist at all.
+;
 ;...................... Memory 1 ................................
 LOAD_ADDR       equ $1000   ; where to load and start module
 MovesGen_ADDR   equ $5000   ; where to generate moves (~2Kb)
