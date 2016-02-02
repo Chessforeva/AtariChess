@@ -79,8 +79,8 @@ Cr_H    .by 0   ; Horizontal 0..7 (A-H)
 ;  The main program starts here
 ;----------------------------------------
 
-StartProg    
- 
+StartProg
+    
     lda #1          ; display about title
     ShowTitle
     ClearScreen
@@ -1023,7 +1023,7 @@ loopTitKeypress
 ; second char    
     and #$f
     sta cc
-    cmp #9
+    cmp #10
     jcs dCdOv9a
     adb cc #'0'
     jmp dCdOka
@@ -1039,7 +1039,7 @@ dCdOka
     alr #$ff
     alr #$ff
     sta cc
-    cmp #9
+    cmp #10
     jcs dCdOv9b
     adb cc #'0'
     jmp dCdOkb
