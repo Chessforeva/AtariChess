@@ -8,14 +8,18 @@
 ; TODO: Comp.chess player AI does not exist at all.
 ;
 ;...................... Memory 1 ................................
-LOAD_ADDR       equ $1000   ; where to load and start module
+
+    ; the program starts here
+                               
+    org  $1000   ; module address*
+    
+    ; *works for .xex, load here and start, for emulators only
+    ; *when developing for .rom,.bin,  program starts at $8000 in read only memory area
+
 MovesGen_ADDR   equ $5000   ; where to generate moves (~2Kb)
 MovesHst_ADDR   equ $6000   ; where is history of moves (~2Kb)
 
-ChessGames_ADDR equ $A000   ; where to load pgn of chess games
-                
-    org  LOAD_ADDR
-                                                        
+                                                                                        
 VCOUNT  equ $d40b ; keeps track of what scan line is currently being drawn
 DLISTL  equ $d402 ; holds the address of the display list
 
@@ -862,89 +866,64 @@ Titles
     
 ; Total display of text = 16 rows of 20 chars
 ;  7 rows per blocks0,1 and 2 rows in block2
+; 7th line little bit over next line
 Title0_blank
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-; little bit over next line
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-; little bit over next line
-    .by "                    "
-    .by "                    "
+
+; shorter (encoded, 320 spaces)
+    .by $ff,160, $ff,160
+    .by 0
+
 ; ---- display of chars
 
 Title1
-    .by "                    "
-    .by "                    "
+    .by $ff,40
+
     .by "   Chessforeva      "
     .by "      ATARI         "
     .by "  8-bit assembler   "
     .by "     project        "
-    .by "                    "
-    
-    .by "                    "
+    .by $ff,40
     .by "    year 2014       "
-    .by "                    "
+    .by $ff,20
     .by "  Replays PGN of    "
     .by "  chess games,      "
     .by "  easy to compile   "
-    .by "                    "
+    .by $ff,60
+    .by 0
     
-    .by "                    "
-    .by "                    "
-
 Title2
-    .by "                    "
-    .by "                    "
+    .by $ff,40
     .by "   World Chess      "
     .by "   Championship     "
     .by "      2014          "
-    .by "                    "
-    .by "                    "
-
+    .by $ff,40
     .by "   Magnus Carlsen   "
-    .by "                    "    
+    .by $ff,20
     .by "        vs          "
-    .by "                    "
+    .by $ff,20
+    
     .by "    Viswanathan     "
     .by "       Anand        "
-    .by "                    "
-    
+    .by $ff,20
     .by "    Sochi, RU       "
     .by "   7th-28th Nov     "
+    .by 0
     
 Title3
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
+    .by $ff,100
     .by "    GAME OVER       "
-    .by "                    "
-    
-    .by "                    "
+    .by $ff,40
     .by "     THANKS!        "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
-    .by "                    "
+    .by $ff,140
+    .by 0
     
-    .by "                    "
-    .by "                    "
+    .by 0   ; last title
+    
 ;-------------------------------------------------------
 ; PROCEDURE  ShowTitle
 ; Regs: a - Nr of title
+;
+; $ff,count = spaces(count), should be 20x...
 ;-------------------------------------------------------
 
 .PROC ShowTitle
@@ -955,18 +934,26 @@ Title3
     .var titRows .byte  ; 16 rows to loop
     .var tit7 .byte  ; about 7 rows per block
     .var titB .byte  ; block
+    .var dSpc .byte  ; decoded spaces
             
     sta titNr
     mwa #Titles mTitle
-loopTit    
+loopTit
     lda titNr
     jeq titleFound
     dec titNr
-    adw mTitle #320     ; address += 16x20
-    jmp loopTit
+loop2nxtTitChr    
+    mwa mTitle $C2
+    adw mTitle #1     ; to next char
+    ldy #0
+    lda ($C2),y       ; skip to end of title
+
+    jne loop2nxtTitChr
+    jmp loopTit     ; if end of title, next
     
 titleFound
     lda #0
+    sta dSpc
     sta titRows
     sta tit7
     sta titB
@@ -975,7 +962,29 @@ loopPrnPgTit
     mwa mTitle $C2      ; $C2,$C3 = data address
     ldy #0          ; prepare 20 char string
 loopCpyTitStr
+    cpb dSpc #0
+    jeq loopCpTNoEncd
+    dec dSpc        ; counter of spaces--
+     
+    lda #32        ; use space
+    jmp loopCpA
+    
+loopCpTNoEncd
     lda ($C2), y     ; read data from memory
+loopCpA:    
+    ;encoded spaces
+    cmp #$ff
+    jne lnoFFspc
+    iny
+
+    lda ($C2), y     ; read count of spaces from memory
+    sta dSpc
+    dey
+    sbw mTitle #18     ; address will be +2 (=20-18)
+    
+    jmp loopCpyTitStr   ; and process encoded
+    
+lnoFFspc:    
     sta Str2print, y
     iny
     cpy #20
@@ -987,8 +996,13 @@ loopCpyTitStr
     Preset
     PrintStr        ; print string
 
+    cpb dSpc #0
+    jeq Lp20e
+    jmp Lp20b
+    
+Lp20e
     adw mTitle #20     ; address += 20
-        
+Lp20b        
     adb tit7 #1     ; ++
     cmp #7          ; if 7 then new block
     jne titNoNewBlock
@@ -2039,14 +2053,13 @@ clmv20sp
 
    icl "ChessLg.asm" 
 
-
-   org ChessGames_ADDR      ; Load chess games into memory
+; pgn-data of chess games
+ChessGames_ADDR
 
    ;icl "wch14.asm"          ; just above 2KB
    ins "wch14.bin"    ; just binary version
 
-    
-; End of program
+End_of_program
 
 
 
