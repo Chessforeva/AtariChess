@@ -38,6 +38,7 @@ Compile on MADS assembler for 8-bit CPU 8502 on Atari.
 Prepare datas by using Lua programs.
 
 
-Visit our sponsors:
-http://chessforeva.appspot.com
+Blog post:
+https://chessforeva.blogspot.com/2014/11/atari-chess-project.html
+
 
